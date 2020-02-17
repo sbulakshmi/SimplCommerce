@@ -10,64 +10,64 @@ variables:
   netCoreSdkVersion: '3.1.100'
 
 jobs:
-- job: Linux
-  pool:
-    vmImage: 'Ubuntu 16.04'
-  steps:
-  - task: DotNetCoreInstaller@0
-    inputs:
-      packageType: 'sdk'
-      version: $(netCoreSdkVersion)
-  - script: dotnet build ./SimplCommerce.sln
-    displayName: 'dotnet build'
-  - script: ./run-tests.sh
-    displayName: 'run tests'
-  - task: PublishTestResults@2
-    displayName: 'Publish Test Results **/*.trx'
-    condition: succeededOrFailed()
-    inputs:
-      testResultsFormat: VSTest
-      testResultsFiles: '**/*.trx' 
+# - job: Linux
+#   pool:
+#     vmImage: 'Ubuntu 16.04'
+#   steps:
+#   - task: DotNetCoreInstaller@0
+#     inputs:
+#       packageType: 'sdk'
+#       version: $(netCoreSdkVersion)
+#   - script: dotnet build ./SimplCommerce.sln
+#     displayName: 'dotnet build'
+#   - script: ./run-tests.sh
+#     displayName: 'run tests'
+#   - task: PublishTestResults@2
+#     displayName: 'Publish Test Results **/*.trx'
+#     condition: succeededOrFailed()
+#     inputs:
+#       testResultsFormat: VSTest
+#       testResultsFiles: '**/*.trx' 
 
-- job: macOS
-  pool:
-    vmImage: 'macOS-10.13'
-  steps:
-  - task: DotNetCoreInstaller@0
-    inputs:
-      packageType: 'sdk'
-      version: $(netCoreSdkVersion)
-  - script: dotnet build ./SimplCommerce.sln
-    displayName: 'dotnet build'
-  - script: ./run-tests.sh
-    displayName: 'run tests'
-  - task: PublishTestResults@2
-    displayName: 'Publish Test Results **/*.trx'
-    condition: succeededOrFailed()
-    inputs:
-      testResultsFormat: VSTest
-      testResultsFiles: '**/*.trx' 
+# - job: macOS
+#   pool:
+#     vmImage: 'macOS-10.13'
+#   steps:
+#   - task: DotNetCoreInstaller@0
+#     inputs:
+#       packageType: 'sdk'
+#       version: $(netCoreSdkVersion)
+#   - script: dotnet build ./SimplCommerce.sln
+#     displayName: 'dotnet build'
+#   - script: ./run-tests.sh
+#     displayName: 'run tests'
+#   - task: PublishTestResults@2
+#     displayName: 'Publish Test Results **/*.trx'
+#     condition: succeededOrFailed()
+#     inputs:
+#       testResultsFormat: VSTest
+#       testResultsFiles: '**/*.trx' 
 
-- job: Windows
-  pool:
-    vmImage: 'windows-2019'
-  steps:
-  - task: DotNetCoreInstaller@0
-    inputs:
-      packageType: 'sdk'
-      version: $(netCoreSdkVersion)
-  - script: dotnet build ./SimplCommerce.sln
-    displayName: 'dotnet build'
-  - task: PowerShell@2
-    inputs:
-      filePath: .\run-tests.ps1
-    displayName: 'run tests'
-  - task: PublishTestResults@2
-    displayName: 'Publish Test Results **/*.trx'
-    condition: succeededOrFailed()
-    inputs:
-      testResultsFormat: VSTest
-      testResultsFiles: '**/*.trx' 
+# - job: Windows
+#   pool:
+#     vmImage: 'windows-2019'
+#   steps:
+#   - task: DotNetCoreInstaller@0
+#     inputs:
+#       packageType: 'sdk'
+#       version: $(netCoreSdkVersion)
+#   - script: dotnet build ./SimplCommerce.sln
+#     displayName: 'dotnet build'
+#   - task: PowerShell@2
+#     inputs:
+#       filePath: .\run-tests.ps1
+#     displayName: 'run tests'
+#   - task: PublishTestResults@2
+#     displayName: 'Publish Test Results **/*.trx'
+#     condition: succeededOrFailed()
+#     inputs:
+#       testResultsFormat: VSTest
+#       testResultsFiles: '**/*.trx' 
 
 - job: LinuxRelease
   pool:
@@ -89,3 +89,22 @@ jobs:
     inputs:
       testResultsFormat: VSTest
       testResultsFiles: '**/*.trx' 
+  - task: DotNetCoreCLI@2
+    inputs:
+      command: publish
+      publishWebProjects: True
+      arguments: '--configuration $(BuildConfiguration) --output $(Build.ArtifactStagingDirectory)'
+      zipAfterPublish: True
+  # - task: DotNetCoreCLI@2
+  #   inputs:
+  #    command: 'custom'
+  #    custom: '
+  - task: CmdLine@2
+    inputs:
+      script: |
+        export PATH="$PATH:$HOME/.dotnet/tools/"
+      
+        dotnet ef migrations script --output $(build.artifactstagingdirectory)\sql\migrations.sql -i'
+  - task: PublishBuildArtifacts@1
+    inputs:
+      pathtoPublish: '$(Build.ArtifactStagingDirectory)' 
