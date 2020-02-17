@@ -95,7 +95,10 @@ jobs:
       publishWebProjects: True
       arguments: '--configuration $(BuildConfiguration) --output $(Build.ArtifactStagingDirectory)'
       zipAfterPublish: True
+  - task: DotNetCoreCLI@2
+    inputs:
+     command: 'custom'
+     custom: 'dotnet ef migrations script --output $(build.artifactstagingdirectory)\sql\migrations.sql -i'
   - task: PublishBuildArtifacts@1
     inputs:
       pathtoPublish: '$(Build.ArtifactStagingDirectory)' 
-     
